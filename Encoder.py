@@ -6,15 +6,15 @@ SAMPLE_RATE = 8000
 BAUD_RATE = 100
 FREQ_MARK = 1200    # Bit 1
 FREQ_SPACE = 2200   # Bit 0
-TERM = "\n\n\n"
+TERM = b"\n\n\n"
 
 PREAMBLE_BITS_COUNT = 16  # 16 alternating bits (10101010...) to lock receiver clock
-START_FLAG = "$$"         # Unique marker indicating data begins next
+START_FLAG = b"$$"         # Unique marker indicating data begins next
 
-def text_to_bits(text):
+def bytes_to_bits(text):
     """Encodes text into bits with Hamming(7,4) error correction."""
     raw_bits = []
-    for char in text.encode('utf-8'):
+    for char in text:
         raw_bits.extend([int(b) for b in f"{char:08b}"])
     
     encoded_bits = []
@@ -35,11 +35,18 @@ def generate_afsk_signal_with_flag(text):
     # 1. Generate Synchronizing Preamble (101010...)
     preamble_bits = [1 if i % 2 == 0 else 0 for i in range(PREAMBLE_BITS_COUNT)]
     
+    if isinstance(text, str):
+        text = text.encode('utf-8')
+    elif isinstance(text, bytes):
+        pass
+    else:
+        raise TypeError
+    
     # 2. Add Payload Terminator
     if not text.endswith(TERM):
         text += TERM
         
-    payload_bits = text_to_bits(START_FLAG + text)
+    payload_bits = bytes_to_bits(START_FLAG + text)
     
     # 3. Add Flush Tail to push the final \n entirely into the audio buffer
     tail_bits = [1, 1, 1, 1]

@@ -7,7 +7,7 @@ SAMPLE_RATE = 8000
 BAUD_RATE = 100
 FREQ_MARK = 1200
 FREQ_SPACE = 2200
-TERM = "\n\n\n"
+TERM = b"\n\n\n"
 
 Messages = []
 
@@ -16,7 +16,7 @@ CHUNK_SIZE = SAMPLES_PER_BIT * 15
 
 audio_queue = queue.Queue()
 
-def bits_to_text(bits):
+def bits_to_bytes(bits):
     """Decodes Hamming(7,4) bits, correcting single-bit errors."""
     decoded_bits = []
     for i in range(0, len(bits), 7):
@@ -40,13 +40,13 @@ def bits_to_text(bits):
         byte_str = "".join(str(b) for b in byte_bits)
         chars.append(int(byte_str, 2))
     try:
-        return bytes(chars).decode('utf-8', errors='ignore').split('\x00')[0]
+        return bytes(chars).split(b'\x00')[0]
     except Exception:
         return ""
 
-def text_to_bits(text):
+def bytes_to_bits(text):
     raw_bits = []
-    for char in text.encode('utf-8'):
+    for char in text:
         raw_bits.extend([int(b) for b in f"{char:08b}"])
     encoded_bits = []
     for i in range(0, len(raw_bits), 4):
@@ -59,7 +59,7 @@ def text_to_bits(text):
         encoded_bits.extend([p1, p2, d1, p3, d2, d3, d4])
     return encoded_bits
 
-START_FLAG_BITS = text_to_bits("$$")
+START_FLAG_BITS = bytes_to_bits(b"$$")
 FLAG_LEN = len(START_FLAG_BITS)
 
 def audio_callback(indata, frames, time, status):
@@ -135,7 +135,7 @@ def processing_worker():
                             test_bits.append(1 if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2) else 0)
                         
                         # Test if this specific phase alignment unlocks the "$$" flag
-                        if bits_to_text(test_bits) == "$$":
+                        if bits_to_bytes(test_bits) == b"$$":
                             print(f"\n[SYNC] Phase Locked! Phase shift offset: {i % 4}")
                             current_state = STATE_READING_PAYLOAD
                             
@@ -163,8 +163,8 @@ def processing_worker():
                 payload_bits = synchronized_bits[FLAG_LEN:]
                 
                 if len(payload_bits) >= 14: # Minimum 1 character
-                    decoded = bits_to_text(payload_bits)
-                    print(f"\r[DECODING]: {decoded.strip().replace('\n', ' ')}", end="", flush=True)
+                    decoded = bits_to_bytes(payload_bits)
+                    print(f"\r[DECODING]: {decoded.strip().replace(b'\n', b' ')}", end="", flush=True)
                     
                     if TERM in decoded:
                         clean_message = decoded.split(TERM)
