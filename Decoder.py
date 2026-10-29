@@ -186,7 +186,7 @@ def processing_worker():
         finally:
             audio_queue.task_done()
 
-if __name__ == "__main__":
+def recv():
     worker_thread = threading.Thread(target=processing_worker, daemon=True)
     worker_thread.start()
     
@@ -202,3 +202,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nStopping Decoder...")
 
+if __name__ == "__main__":
+    recv()

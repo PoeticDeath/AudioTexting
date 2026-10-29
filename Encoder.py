@@ -64,13 +64,14 @@ def generate_afsk_signal_with_flag(text):
     audio_8bit = ((signal + 1) * 127.5).astype(np.uint8)
     return audio_8bit
 
-# --- RUN THE TRANSMITTER ---
-message = "Hello, World!\nTesting."
-print(f"Transmitting message with clock-sync preamble and tail flush...")
-audio_data = generate_afsk_signal_with_flag(message)
+def send(message="Hello, World!\nTesting."):
+    # --- RUN THE TRANSMITTER ---
+    print(f"Transmitting message with clock-sync preamble and tail flush...")
+    audio_data = generate_afsk_signal_with_flag(message)
+    playback_buffer = (audio_data.astype(np.float32) - 127.5) / 127.5
+    sd.play(playback_buffer, SAMPLE_RATE)
+    sd.wait()
+    print("Transmission finished.")
 
-playback_buffer = (audio_data.astype(np.float32) - 127.5) / 127.5
-sd.play(playback_buffer, SAMPLE_RATE)
-sd.wait()
-print("Transmission finished.")
-
+if __name__ == "__main__":
+    send()
