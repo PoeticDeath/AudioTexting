@@ -9,6 +9,8 @@ FREQ_MARK = 1200
 FREQ_SPACE = 2200
 TERM = "\n\n\n"
 
+Messages = []
+
 SAMPLES_PER_BIT = int(SAMPLE_RATE / BAUD_RATE)  # 80 samples
 CHUNK_SIZE = SAMPLES_PER_BIT * 15  
 
@@ -167,6 +169,7 @@ def processing_worker():
                     if TERM in decoded:
                         clean_message = decoded.split(TERM)
                         print(f"\n[RECEIVED COMPLETE]: {clean_message[0]}")
+                        Messages.append(clean_message[0])
                         
                         # Calculate exactly how many raw text characters were sent (including '\n')
                         chars_transmitted = len(clean_message[0]) + 1
