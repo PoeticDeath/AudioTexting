@@ -80,7 +80,7 @@ if __name__ == "__main__":
         while True:
             try:
                 message = Decoder.Messages.pop(0)
-                process(message)
+                print(process(message))
             except IndexError:
                 pass
 
