@@ -1,6 +1,8 @@
 import Decoder
 import Encoder
+from time import time
 from os import listdir
+from datetime import datetime
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import rsa, padding, utils
 
@@ -63,7 +65,7 @@ def prepare(message, recipient):
     with open(f"Keys/{recipient}_pub.pem", "rb") as key_file:
         recipient_pub_key = serialization.load_pem_public_key(key_file.read())
     recipient_identity = get_identity(recipient_pub_key)
-    message = encrypt(len(identity).to_bytes(8, "big") + identity + message, recipient_pub_key)
+    message = encrypt(len(identity).to_bytes(8, "big") + identity + datetime.fromtimestamp(time()).strftime("%Y-%m-%d %I:%M:%S %p: ").encode("utf-8") + message, recipient_pub_key)
     signature = sign(message)
     data = len(recipient_identity).to_bytes(8, "big") + len(message).to_bytes(8, "big") + recipient_identity + message + signature
     return data
