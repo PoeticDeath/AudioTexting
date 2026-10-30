@@ -165,9 +165,10 @@ def processing_worker():
                     decoded = bits_to_bytes(payload_bits)
                     print(f"\r[DECODING]: {decoded}", end="", flush=True)
                     
-                    if (len(decoded[8:]) == int.from_bytes(decoded[:8], "big")) and (len(decoded) >= 8):
-                        print(f"\n[RECEIVED COMPLETE]: {decoded[8:]}")
-                        Messages.append(decoded[8:])
+                    length = int.from_bytes(decoded[:8], "big")
+                    if (len(decoded[8:]) >= length) and (len(decoded) >= 8):
+                        print(f"\n[RECEIVED COMPLETE]: {decoded[8:][:length]}")
+                        Messages.append(decoded[8:][:length])
                         
                         # Calculate exactly how many raw text characters were sent
                         chars_transmitted = len(decoded)
