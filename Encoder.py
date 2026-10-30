@@ -6,7 +6,6 @@ SAMPLE_RATE = 8000
 BAUD_RATE = 100
 FREQ_MARK = 1200    # Bit 1
 FREQ_SPACE = 2200   # Bit 0
-TERM = b"\n\n\n"
 
 PREAMBLE_BITS_COUNT = 16  # 16 alternating bits (10101010...) to lock receiver clock
 START_FLAG = b"$$"         # Unique marker indicating data begins next
@@ -42,9 +41,8 @@ def generate_afsk_signal_with_flag(text):
     else:
         raise TypeError
     
-    # 2. Add Payload Terminator
-    if not text.endswith(TERM):
-        text += TERM
+    # 2. Add Payload Length
+    text = len(text).to_bytes(8, "big") + text
         
     payload_bits = bytes_to_bits(START_FLAG + text)
     

@@ -7,7 +7,6 @@ SAMPLE_RATE = 8000
 BAUD_RATE = 100
 FREQ_MARK = 1200
 FREQ_SPACE = 2200
-TERM = b"\n\n\n"
 
 Messages = []
 
@@ -40,7 +39,7 @@ def bits_to_bytes(bits):
         byte_str = "".join(str(b) for b in byte_bits)
         chars.append(int(byte_str, 2))
     try:
-        return bytes(chars).split(b'\x00')[0]
+        return bytes(chars)
     except Exception:
         return ""
 
@@ -164,15 +163,14 @@ def processing_worker():
                 
                 if len(payload_bits) >= 14: # Minimum 1 character
                     decoded = bits_to_bytes(payload_bits)
-                    print(f"\r[DECODING]: {decoded.strip().replace(b'\n', b' ')}", end="", flush=True)
+                    print(f"\r[DECODING]: {decoded}", end="", flush=True)
                     
-                    if TERM in decoded:
-                        clean_message = decoded.split(TERM)
-                        print(f"\n[RECEIVED COMPLETE]: {clean_message[0]}")
-                        Messages.append(clean_message[0])
+                    if (len(decoded[8:]) == int.from_bytes(decoded[:8], "big")) and (len(decoded) >= 8):
+                        print(f"\n[RECEIVED COMPLETE]: {decoded[8:]}")
+                        Messages.append(decoded[8:])
                         
-                        # Calculate exactly how many raw text characters were sent (including '\n')
-                        chars_transmitted = len(clean_message[0]) + 1
+                        # Calculate exactly how many raw text characters were sent
+                        chars_transmitted = len(decoded)
                         
                         # total bits = $$ flag bits (28) + payload bits (chars * 14)
                         total_bits_consumed = FLAG_LEN + (chars_transmitted * 14)
