@@ -81,7 +81,8 @@ def processing_worker():
     SAMPLES_PER_STEP = SAMPLES_PER_BIT // OVERSAMPLE_FACTOR 
     
     # High-density oversampled raw decisions buffer
-    oversampled_stream = [] 
+    oversampled_stream = []
+    lastlen = 0
     
     # State Machine Variables
     STATE_LOOKING_FOR_FLAG = 0
@@ -106,7 +107,6 @@ def processing_worker():
                 audio_buffer = audio_buffer[SAMPLES_PER_STEP:] 
                 
                 if np.max(np.abs(bit_window)) < 0.015:
-                    oversampled_stream.append(1) # Squelch defaults to Mark (1)
                     continue 
                 
                 mark_mag = np.sqrt(np.sum(bit_window * mark_cos)**2 + np.sum(bit_window * mark_sin)**2)
@@ -138,7 +138,7 @@ def processing_worker():
                         
                             # Test if this specific phase alignment unlocks the flag
                             if bits_to_bytes(test_bits) == FLAG:
-                                print(f"\n[SYNC] Phase Locked! Phase shift offset: {i % 4}")
+                                print(f"\n[SYNC] Phase Locked! Phase shift offset: {i % 4}.")
                                 current_state = STATE_READING_PAYLOAD
                             
                                 # Trim everything before this perfect starting point
@@ -151,28 +151,31 @@ def processing_worker():
                     if current_state == STATE_LOOKING_FOR_FLAG and len(oversampled_stream) > 4000:
                         oversampled_stream = oversampled_stream[-oversampled_flag_len:]
 
+            if lastlen != len(oversampled_stream):
+                lastlen = len(oversampled_stream)
+                print(f"{(lastlen + 13) // (14 * OVERSAMPLE_FACTOR)} bytes received.", end="\r")
+                continue
+
             if current_state == STATE_READING_PAYLOAD:
-                # Build the synchronized bitstream using the established phase offset
-                synchronized_bits = []
-                
                 # Check how many whole bits are fully available in the oversampled buffer
                 available_bits = len(oversampled_stream) // OVERSAMPLE_FACTOR
+                # Build the synchronized bitstream using the established phase offset
+                synchronized_bits = [0] * available_bits
                 
                 for b in range(available_bits):
                     idx = b * OVERSAMPLE_FACTOR
                     bit_slice = oversampled_stream[idx : idx + OVERSAMPLE_FACTOR]
-                    synchronized_bits.append(1 if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2) else 0)
+                    if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2):
+                        synchronized_bits[b] = 1
                 
                 # Skip the flag bits themselves to look at the text payload
                 payload_bits = synchronized_bits[FLAG_LEN:]
                 
                 if len(payload_bits) >= 14: # Minimum 1 character
                     decoded = bits_to_bytes(payload_bits)
-                    print(f"\r[DECODING]: {decoded}", end="", flush=True)
-                    
                     length = int.from_bytes(decoded[:8], "big")
                     if (len(decoded[8:]) >= length) and (len(decoded) >= 8):
-                        print(f"\n[RECEIVED COMPLETE]: {decoded[8:][:length]}")
+                        print(f"\n[RECEIVE COMPLETE]: {decoded[8:][:length]} of length {length}.")
                         Messages.append(decoded[8:][:length])
                         
                         # Calculate exactly how many raw text characters were sent
