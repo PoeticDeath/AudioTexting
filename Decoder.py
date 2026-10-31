@@ -106,7 +106,7 @@ def processing_worker():
                 bit_window = audio_buffer[:SAMPLES_PER_BIT]
                 audio_buffer = audio_buffer[SAMPLES_PER_STEP:] 
                 
-                if np.max(np.abs(bit_window)) < 0.015:
+                if np.max(np.abs(bit_window)) < 0.21:
                     continue 
                 
                 mark_mag = np.sqrt(np.sum(bit_window * mark_cos)**2 + np.sum(bit_window * mark_sin)**2)
