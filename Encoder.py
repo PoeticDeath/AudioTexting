@@ -46,8 +46,8 @@ def generate_afsk_signal_with_flag(text):
         
     payload_bits = bytes_to_bits(START_FLAG + text)
     
-    # 3. Add Flush Tail to push the final \n entirely into the audio buffer
-    tail_bits = [1, 1, 1, 1]
+    # 3. Add Flush Tail to push the final bits entirely into the audio buffer
+    tail_bits = [1] * ((SAMPLE_RATE + 1999) // 2000)
     
     # Combine into one full bit array
     all_bits = preamble_bits + payload_bits + tail_bits
