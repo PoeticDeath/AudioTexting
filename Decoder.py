@@ -58,7 +58,8 @@ def bytes_to_bits(text):
         encoded_bits.extend([p1, p2, d1, p3, d2, d3, d4])
     return encoded_bits
 
-START_FLAG_BITS = bytes_to_bits(b"$$")
+FLAG = b"$$"
+START_FLAG_BITS = bytes_to_bits(FLAG)
 FLAG_LEN = len(START_FLAG_BITS)
 
 def audio_callback(indata, frames, time, status):
@@ -125,16 +126,17 @@ def processing_worker():
                     for i in range(len(oversampled_stream) - oversampled_flag_len + 1):
                         
                         # Downsample a candidate stream based on this specific offset 'i'
-                        test_bits = []
+                        test_bits = [0] * FLAG_LEN
                         for b in range(FLAG_LEN):
                             # Grab 4 oversamples starting at our current offset
                             idx = i + (b * OVERSAMPLE_FACTOR)
                             bit_slice = oversampled_stream[idx : idx + OVERSAMPLE_FACTOR]
                             # Majority vote
-                            test_bits.append(1 if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2) else 0)
+                            if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2):
+                                test_bits[b] = 1
                         
-                        # Test if this specific phase alignment unlocks the "$$" flag
-                        if bits_to_bytes(test_bits) == b"$$":
+                        # Test if this specific phase alignment unlocks the flag
+                        if bits_to_bytes(test_bits) == FLAG:
                             print(f"\n[SYNC] Phase Locked! Phase shift offset: {i % 4}")
                             current_state = STATE_READING_PAYLOAD
                             
