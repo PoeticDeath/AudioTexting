@@ -123,26 +123,29 @@ def processing_worker():
                 
                 if len(oversampled_stream) >= oversampled_flag_len:
                     # Slide sample-by-sample to find the phase phase phase offset
-                    for i in range(len(oversampled_stream) - oversampled_flag_len + 1):
+                    try:
+                        for i in range(oversampled_stream.index(0), len(oversampled_stream) - oversampled_flag_len + 1):
                         
-                        # Downsample a candidate stream based on this specific offset 'i'
-                        test_bits = [0] * FLAG_LEN
-                        for b in range(FLAG_LEN):
-                            # Grab 4 oversamples starting at our current offset
-                            idx = i + (b * OVERSAMPLE_FACTOR)
-                            bit_slice = oversampled_stream[idx : idx + OVERSAMPLE_FACTOR]
-                            # Majority vote
-                            if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2):
-                                test_bits[b] = 1
+                            # Downsample a candidate stream based on this specific offset 'i'
+                            test_bits = [0] * FLAG_LEN
+                            for b in range(FLAG_LEN):
+                                # Grab 4 oversamples starting at our current offset
+                                idx = i + (b * OVERSAMPLE_FACTOR)
+                                bit_slice = oversampled_stream[idx : idx + OVERSAMPLE_FACTOR]
+                                # Majority vote
+                                if sum(bit_slice) > (OVERSAMPLE_FACTOR / 2):
+                                    test_bits[b] = 1
                         
-                        # Test if this specific phase alignment unlocks the flag
-                        if bits_to_bytes(test_bits) == FLAG:
-                            print(f"\n[SYNC] Phase Locked! Phase shift offset: {i % 4}")
-                            current_state = STATE_READING_PAYLOAD
+                            # Test if this specific phase alignment unlocks the flag
+                            if bits_to_bytes(test_bits) == FLAG:
+                                print(f"\n[SYNC] Phase Locked! Phase shift offset: {i % 4}")
+                                current_state = STATE_READING_PAYLOAD
                             
-                            # Trim everything before this perfect starting point
-                            oversampled_stream = oversampled_stream[i:]
-                            break
+                                # Trim everything before this perfect starting point
+                                oversampled_stream = oversampled_stream[i:]
+                                break
+                    except ValueError:
+                        pass
                     
                     # Prevent memory leak when hunting for a flag
                     if current_state == STATE_LOOKING_FOR_FLAG and len(oversampled_stream) > 4000:
