@@ -2,10 +2,10 @@ import numpy as np
 import sounddevice as sd
 
 # Configurations
-SAMPLE_RATE = 8000
-BAUD_RATE = 100
-FREQ_MARK = 1200    # Bit 1
-FREQ_SPACE = 2200   # Bit 0
+SAMPLE_RATE = 12000
+BAUD_RATE = 3000    # 100 = 7 bytes / sec after Hamming
+FREQ_MARK = 1000    # Bit 1
+FREQ_SPACE = 3000   # Bit 0
 
 PREAMBLE_BITS_COUNT = 16  # 16 alternating bits (10101010...) to lock receiver clock
 START_FLAG = b"$$"         # Unique marker indicating data begins next
@@ -47,7 +47,7 @@ def generate_afsk_signal_with_flag(text):
     payload_bits = bytes_to_bits(START_FLAG + text)
     
     # 3. Add Flush Tail to push the final bits entirely into the audio buffer
-    tail_bits = [1] * ((SAMPLE_RATE + 1999) // 2000)
+    tail_bits = [1, 1, 1, 1] * ((SAMPLE_RATE + 99) // 100)
     
     # Combine into one full bit array
     all_bits = preamble_bits + payload_bits + tail_bits

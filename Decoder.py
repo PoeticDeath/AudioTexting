@@ -3,10 +3,10 @@ import sounddevice as sd
 import queue
 import threading
 
-SAMPLE_RATE = 8000
-BAUD_RATE = 100
-FREQ_MARK = 1200
-FREQ_SPACE = 2200
+SAMPLE_RATE = 12000
+BAUD_RATE = 3000
+FREQ_MARK = 1000
+FREQ_SPACE = 3000
 
 Messages = []
 
