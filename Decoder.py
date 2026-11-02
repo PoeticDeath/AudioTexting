@@ -1,10 +1,7 @@
-import ConCodec
 import numpy as np
 import sounddevice as sd
 import queue
 import threading
-
-codec = ConCodec.ConvolutionalCodec()
 
 SAMPLE_RATE = 12000
 BAUD_RATE = 1500
@@ -20,7 +17,6 @@ audio_queue = queue.Queue()
 
 def bits_to_bytes(bits):
     """Decodes Hamming(7,4) bits, correcting single-bit errors."""
-    bits = codec.viterbi_decode(bits)
     decoded_bits = []
     for i in range(0, len(bits), 7):
         block = bits[i:i+7]
@@ -60,7 +56,7 @@ def bytes_to_bits(text):
         p2 = d1 ^ d3 ^ d4
         p3 = d2 ^ d3 ^ d4
         encoded_bits.extend([p1, p2, d1, p3, d2, d3, d4])
-    return codec.encode(encoded_bits)
+    return encoded_bits
 
 FLAG = b"$$"
 START_FLAG_BITS = bytes_to_bits(FLAG)
@@ -157,7 +153,7 @@ def processing_worker():
 
             if lastlen != len(oversampled_stream):
                 lastlen = len(oversampled_stream)
-                print(f"{(lastlen + 13) // (14 * OVERSAMPLE_FACTOR) // 2} bytes received.", end="\r")
+                print(f"{(lastlen + 13) // (14 * OVERSAMPLE_FACTOR)} bytes received.", end="\r")
                 continue
 
             if current_state == STATE_READING_PAYLOAD:
