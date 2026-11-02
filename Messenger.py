@@ -43,37 +43,44 @@ def decrypt(message):
     return data
 
 def process(message):
-    identity_len = int.from_bytes(message[:8], "big")
-    message_len = int.from_bytes(message[8:16], "big")
-    signature_len = len(message) - identity_len - message_len
-    if message[16:][:identity_len] == identity:
-        data = decrypt(message[16 + identity_len:][:message_len])
-        sender_identity_len = int.from_bytes(data[:8], "big")
-        data_message_len = len(data) - sender_identity_len
-        for i in listdir("Keys/"):
-            if i.endswith("_pub.pem"):
-                with open(f"Keys/{i}", "rb") as key_file:
-                    sender_pub_key = serialization.load_pem_public_key(key_file.read())
-                    if get_identity(sender_pub_key) == data[8:][:sender_identity_len]:
-                        break
-        signature = message[16 + identity_len + message_len:][:signature_len]
+    message_len = int.from_bytes(message[:8], "big")
+    signature_len = len(message) - message_len
+    try:
+        data = decrypt(message[8:][:message_len])
+    except ValueError:
+        return
+    identity_len = int.from_bytes(data[:8], "big")
+    sender_identity_len = int.from_bytes(data[8:16], "big")
+    data_message_len = len(data) - identity_len - sender_identity_len
+    for i in listdir("Keys/"):
+        if i.endswith("_pub.pem"):
+            with open(f"Keys/{i}", "rb") as key_file:
+                sender_pub_key = serialization.load_pem_public_key(key_file.read())
+                if get_identity(sender_pub_key) == data[16 + identity_len:][:sender_identity_len]:
+                    break
+                del sender_pub_key
+    signature = message[8 + message_len:][:signature_len]
+    try:
         sender_identity = f"Unknown claiming to be {i[:-8]}"
-        if verify(message[16 + identity_len:][:message_len], signature, sender_pub_key):
+        if verify(data, signature, sender_pub_key):
             sender_identity = i[:-8]
-        return (data[8 + sender_identity_len:][:data_message_len], sender_identity)
+    except NameError:
+        sender_identity = "Unknown"
+    return (data[16 + identity_len + sender_identity_len:][:data_message_len], sender_identity)
 def prepare(message, recipient):
     with open(f"Keys/{recipient}_pub.pem", "rb") as key_file:
         recipient_pub_key = serialization.load_pem_public_key(key_file.read())
     recipient_identity = get_identity(recipient_pub_key)
-    message = encrypt(len(identity).to_bytes(8, "big") + identity + datetime.fromtimestamp(time()).strftime("%Y-%m-%d %I:%M:%S %p: ").encode("utf-8") + message, recipient_pub_key)
+    message = len(recipient_identity).to_bytes(8, "big") + len(identity).to_bytes(8, "big") + recipient_identity + identity + datetime.fromtimestamp(time()).strftime("%Y-%m-%d %I:%M:%S %p: ").encode("utf-8") + message
     signature = sign(message)
-    data = len(recipient_identity).to_bytes(8, "big") + len(message).to_bytes(8, "big") + recipient_identity + message + signature
+    message = encrypt(message, recipient_pub_key)
+    data = len(message).to_bytes(8, "big") + message + signature
     return data
 
 if __name__ == "__main__":
     from sys import argv
     if argv[1] == "0":
-        data = prepare(b"Hello, World!", "Tony Kerr")
+        data = prepare(b"Jesus is God!", "Tony Kerr")
         Encoder.send(data)
     elif argv[1] == "1":
         import threading
