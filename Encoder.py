@@ -3,11 +3,11 @@ import sounddevice as sd
 
 # Configurations
 SAMPLE_RATE = 12000
-BAUD_RATE = 3000    # 100 = 7 bytes / sec after Hamming
+BAUD_RATE = 1500    # 100 = 7 bytes / sec after Hamming
 FREQ_MARK = 1000    # Bit 1
-FREQ_SPACE = 3000   # Bit 0
+FREQ_SPACE = 2000   # Bit 0
 
-PREAMBLE_BITS_COUNT = 16  # 16 alternating bits (10101010...) to lock receiver clock
+PREAMBLE_BITS_COUNT = 750  # 16 alternating bits (10101010...) to lock receiver clock
 START_FLAG = b"$$"         # Unique marker indicating data begins next
 
 def bytes_to_bits(text):
@@ -32,7 +32,7 @@ def bytes_to_bits(text):
 
 def generate_afsk_signal_with_flag(text):
     # 1. Generate Synchronizing Preamble (101010...)
-    preamble_bits = [1 if i % 2 == 0 else 0 for i in range(PREAMBLE_BITS_COUNT)]
+    preamble_bits = [1 for i in range(PREAMBLE_BITS_COUNT)]
     
     if isinstance(text, str):
         text = text.encode('utf-8')

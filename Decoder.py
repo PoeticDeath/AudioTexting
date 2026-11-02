@@ -4,9 +4,9 @@ import queue
 import threading
 
 SAMPLE_RATE = 12000
-BAUD_RATE = 3000
+BAUD_RATE = 1500
 FREQ_MARK = 1000
-FREQ_SPACE = 3000
+FREQ_SPACE = 2000
 
 Messages = []
 
@@ -106,7 +106,7 @@ def processing_worker():
                 bit_window = audio_buffer[:SAMPLES_PER_BIT]
                 audio_buffer = audio_buffer[SAMPLES_PER_STEP:] 
                 
-                if np.max(np.abs(bit_window)) < 0.21:
+                if np.max(np.abs(bit_window)) < 0.02:
                     continue 
                 
                 mark_mag = np.sqrt(np.sum(bit_window * mark_cos)**2 + np.sum(bit_window * mark_sin)**2)
