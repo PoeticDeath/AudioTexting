@@ -1,5 +1,8 @@
+import ConCodec
 import numpy as np
 import sounddevice as sd
+
+codec = ConCodec.ConvolutionalCodec()
 
 # Configurations
 SAMPLE_RATE = 12000
@@ -28,7 +31,7 @@ def bytes_to_bits(text):
         p3 = d2 ^ d3 ^ d4
         encoded_bits.extend([p1, p2, d1, p3, d2, d3, d4])
         
-    return encoded_bits
+    return codec.encode(encoded_bits)
 
 def generate_afsk_signal_with_flag(text):
     # 1. Generate Synchronizing Preamble (101010...)
