@@ -148,7 +148,7 @@ def processing_worker():
                         pass
                     
                     # Prevent memory leak when hunting for a flag
-                    if current_state == STATE_LOOKING_FOR_FLAG and len(oversampled_stream) > 4000:
+                    if current_state == STATE_LOOKING_FOR_FLAG and len(oversampled_stream) >= oversampled_flag_len:
                         oversampled_stream = oversampled_stream[-oversampled_flag_len:]
 
             if lastlen != len(oversampled_stream):
