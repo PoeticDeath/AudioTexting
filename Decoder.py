@@ -112,7 +112,7 @@ def processing_worker():
                 mark_mag = np.sqrt(np.sum(bit_window * mark_cos)**2 + np.sum(bit_window * mark_sin)**2)
                 space_mag = np.sqrt(np.sum(bit_window * space_cos)**2 + np.sum(bit_window * space_sin)**2)
                 
-                oversampled_stream.append(1 if mark_mag > space_mag else 0)
+                oversampled_stream.append(1 if mark_mag > (space_mag * 1.01) else 0)
             
             # --- Step 2: High-Resolution Packet Extraction State Machine ---
             
