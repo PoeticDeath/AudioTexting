@@ -3,7 +3,7 @@ import sounddevice as sd
 import time
 
 SAMPLE_RATE = 12000
-BAUD_RATE = 1500    
+BAUD_RATE = 300    
 FREQ_MARK = 1000    # Bit 1
 FREQ_SPACE = 2000   # Bit 0
 
@@ -96,7 +96,7 @@ def send(message, chunk_size=64):
         sd.wait()
         
         # Guard interval to allow the receiver's hardware buffer to breathe
-        time.sleep(0.08)
+        time.sleep(3.08)
         
     print(f"\n[+] Transmission of Packet {packet_id} complete.")
 

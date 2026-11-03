@@ -4,7 +4,7 @@ import queue
 import threading
 
 SAMPLE_RATE = 12000
-BAUD_RATE = 1500
+BAUD_RATE = 300
 FREQ_MARK = 1000
 FREQ_SPACE = 2000
 
